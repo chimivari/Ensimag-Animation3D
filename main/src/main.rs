@@ -1,3 +1,6 @@
+use bvh_parser::prelude::*;
+
 fn main() {
-    println!("Hello, world!");
+    let bvh_file = std::fs::read_to_string("inputs/walk1.bvh").unwrap();
+    parse(bvh_file);
 }
