@@ -1,5 +1,5 @@
 # Animation 3D
-Par : Tristant Lemarchand, Andéol Vella
+Par : Tristan Lemarchand, Andéol Vella
 
 ## Prérequis
 Rust généralise le concepte de librairie et d'application exécutable par le mot _crate_.
