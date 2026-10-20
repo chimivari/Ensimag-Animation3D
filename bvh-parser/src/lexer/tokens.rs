@@ -1,10 +1,12 @@
+#[derive(Debug)]
 pub enum Axis {
     X,
     Y,
     Z,
 }
 
-pub enum TokensBVH {
+#[derive(Debug)]
+pub enum TokenBVH {
     // Const keywords
     Hierarchy,
     Motion,
@@ -12,8 +14,10 @@ pub enum TokensBVH {
     Joint,
     End,
     Channels,
-    Offsets,
+    Offset,
+    Frames,
     Frame,
+    Time,
     FrameTime,
 
     // Channels
@@ -21,12 +25,11 @@ pub enum TokensBVH {
     Rotation(Axis),
 
     // Variables
-    Number(u32),
+    NaturalNumber(u32),
     Real(f32),
     Name(String),
 
     // Other symbols
-    Colon,
     OpeneBrace,
     CloseBrace,
 }
