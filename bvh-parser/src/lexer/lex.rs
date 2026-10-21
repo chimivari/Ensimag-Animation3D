@@ -30,7 +30,7 @@ impl LexerBVH {
                 "Yrotation" => TokenBVH::Rotation(Axis::Y),
                 "Zrotation" => TokenBVH::Rotation(Axis::Z),
 
-                "{" => TokenBVH::OpeneBrace,
+                "{" => TokenBVH::OpenBrace,
                 "}" => TokenBVH::CloseBrace,
 
                 _ if let Ok(v) = word.parse::<u32>() => TokenBVH::NaturalNumber(v),
@@ -44,6 +44,11 @@ impl LexerBVH {
             tokens.push(token);
         }
         Ok(Self { tokens })
+    }
+
+    /// Returns a vector with all tokens
+    pub fn into_tokens(self) -> Vec<TokenBVH> {
+        self.tokens
     }
 }
 

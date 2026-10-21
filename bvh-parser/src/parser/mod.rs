@@ -1,19 +1,22 @@
 use std::fmt::Debug;
 
-use super::lexer::tokens::TokenBVH;
+pub mod nodes;
+pub mod parsing;
 
 pub struct ParsingError {
-    token: TokenBVH,
+    message: String,
 }
 
 impl ParsingError {
-    pub fn new(token: TokenBVH) -> Self {
-        Self { token }
+    pub fn new(message: &str) -> Self {
+        Self {
+            message: message.to_string(),
+        }
     }
 }
 
 impl Debug for ParsingError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Parsing error : token no expected {:?}", self.token)
+        write!(f, "Parssing error : {}", self.message)
     }
 }
