@@ -6,8 +6,8 @@ use super::nodes::*;
 
 #[derive(Debug)]
 pub struct ParserBVH {
-    hierarchy: Hierarchy,
-    motion: Motion,
+    pub hierarchy: Hierarchy,
+    pub motion: Motion,
 }
 
 type Peekable = std::iter::Peekable<std::vec::IntoIter<TokenBVH>>;
@@ -155,9 +155,9 @@ impl ParserBVH {
         }
         // Parse coordinates
         let mut offset = [0f32; 3];
-        for i in 0..3 {
+        for o in &mut offset {
             match Self::try_parse_real(it) {
-                Some(v) => offset[i] = v,
+                Some(v) => *o = v,
                 None => Err(ParsingError::new("Offset misses a coordinate"))?,
             }
         }

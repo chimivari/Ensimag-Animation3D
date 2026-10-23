@@ -1,9 +1,4 @@
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub enum Axis {
-    X,
-    Y,
-    Z,
-}
+use crate::geometry::Axis;
 
 #[derive(Debug, PartialEq)]
 pub enum TokenBVH {
@@ -40,26 +35,6 @@ impl TokenBVH {
     pub fn get_name(self) -> String {
         match self {
             TokenBVH::Name(name) => name,
-            _ => panic!("Cannot get the name of this token : {self:?}"),
-        }
-    }
-
-    /// Returns the u32 contaned in TokenBVH::NaturalNumber
-    ///
-    /// Panics if it is not the right token
-    pub fn get_natural_number(self) -> u32 {
-        match self {
-            TokenBVH::NaturalNumber(n) => n,
-            _ => panic!("Cannot get the name of this token : {self:?}"),
-        }
-    }
-
-    /// Returns the f32 contaned in TokenBVH::Real
-    ///
-    /// Panics if it is not the right token
-    pub fn get_real(self) -> f32 {
-        match self {
-            TokenBVH::Real(v) => v,
             _ => panic!("Cannot get the name of this token : {self:?}"),
         }
     }

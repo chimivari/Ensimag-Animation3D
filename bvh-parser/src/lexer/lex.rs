@@ -1,5 +1,6 @@
 use super::LexerError;
-use super::tokens::{Axis, TokenBVH};
+use super::tokens::TokenBVH;
+use crate::geometry::Axis;
 
 #[derive(Debug)]
 pub struct LexerBVH {
