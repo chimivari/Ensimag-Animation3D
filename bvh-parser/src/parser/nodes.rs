@@ -7,6 +7,7 @@ use std::{collections::VecDeque, fmt::Debug};
 pub struct Hierarchy {
     pub roots: Vec<Root>,
 }
+
 impl Hierarchy {
     pub fn add_root(&mut self, root: Root) {
         self.roots.push(root);
@@ -20,6 +21,7 @@ pub struct Root {
     pub channels: Vec<Channel>,
     pub children: Vec<Box<dyn HierarchyNode>>,
 }
+
 impl Root {
     pub fn new(_name: String, offset: [f32; 3], channels: Vec<Channel>) -> Self {
         if channels.len() != 6 {
