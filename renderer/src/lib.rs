@@ -54,14 +54,10 @@ void main()
 
     let shader_program = renderer.create_shader_program(vertex_shader, fragment_shader).unwrap();
 
-    println!("AAA 1");
-
     let lines = Box::new(Lines::new(&vertices, shader_program));
-    println!("AAA 2");
 
     renderer.drawables.push(lines);
 
-    println!("AAA 3");
     while !renderer.stop_requested()
     {
         renderer.render();
