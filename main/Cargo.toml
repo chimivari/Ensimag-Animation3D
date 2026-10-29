@@ -5,4 +5,5 @@ edition = "2024"
 
 [dependencies]
 bvh-parser = { path = "../bvh-parser" }
+glam = "0.34.1"
 renderer = { path = "../renderer" }
