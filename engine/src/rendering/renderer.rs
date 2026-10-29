@@ -1,6 +1,6 @@
-use crate::drawable::Drawable;
-use crate::shader::{ShaderConfig, ShaderProgram};
-use crate::glfwwindow::GLFWWindow;
+use crate::rendering::drawable::Drawable;
+use crate::rendering::shader::{ShaderConfig, ShaderProgram};
+use crate::rendering::glfwwindow::GLFWWindow;
 
 use glfw::{Context};
 

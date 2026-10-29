@@ -1,7 +1,7 @@
 use glam::Vec3;
 use std::ffi::c_void;
 use std::mem::size_of;
-use crate::shader::ShaderProgram;
+use crate::rendering::shader::ShaderProgram;
 
 
 

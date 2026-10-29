@@ -2,9 +2,9 @@ use glam::Vec3;
 
 use bvh_parser::prelude::*;
 
-use renderer::shader::{ShaderConfig, ShaderSourceType};
-use renderer::renderer::Renderer;
-use renderer::drawable::Lines;
+use engine::rendering::shader::{ShaderConfig, ShaderSourceType};
+use engine::rendering::renderer::Renderer;
+use engine::rendering::drawable::Lines;
 
 #[warn(unused)]
 fn main_parser()

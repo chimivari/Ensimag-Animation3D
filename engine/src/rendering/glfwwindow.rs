@@ -41,6 +41,4 @@ impl GLFWWindow
         })
 
     }
-
 }
-
