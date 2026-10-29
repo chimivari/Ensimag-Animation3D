@@ -2,7 +2,7 @@ use crate::rendering::drawable::Drawable;
 use crate::rendering::shader::{ShaderConfig, ShaderProgram};
 use crate::rendering::glfwwindow::GLFWWindow;
 
-use glfw::{Context};
+use glfw::Context;
 
 
 pub struct Renderer<'a>
@@ -64,4 +64,16 @@ impl<'a> Renderer<'a>
         glfw::flush_messages(&self.window.events);
     }
 
+}
+
+impl Drop for Renderer<'_>
+{
+    fn drop(&mut self)
+    {
+        // Force drop on drawables to prevent opengl segfault
+        self.drawables.clear();
+        // Force drop on shader programs too
+        self.shader_programs.clear();
+    }
+    
 }
