@@ -11,17 +11,17 @@ pub trait Drawable
     fn bind_shader_program(&mut self, shader_program: &ShaderProgram);
 }
 
-pub struct Lines<'a>
+pub struct Lines
 {
-    vertices: &'a [Vec3],
+    gl_shader_program_slot: u32,
     vao: u32,
     vbo: u32,
-    gl_shader_program_slot: u32
+    vertices: Box<[Vec3]>
 }
 
-impl<'a> Lines<'a>
+impl Lines
 {
-    pub fn new(vertices: &'a [Vec3], shader_program: &ShaderProgram) -> Lines<'a>
+    pub fn new(vertices: &[Vec3], shader_program: &ShaderProgram) -> Self
     {
         let mut vao: u32 = u32::MAX;
         let mut vbo: u32 = u32::MAX;
@@ -51,16 +51,26 @@ impl<'a> Lines<'a>
         }
 
         Self {
-            vertices,
+            vertices: Box::from(vertices),
             vao,
             vbo,
             gl_shader_program_slot: shader_program.gl_program_slot
         }
 
     }
+
+    pub fn update_vertices(&self, indices: &[usize], new_values: &[Vec3])
+    {
+        // for index in indices
+        // {
+        //     self.vertices[]
+        // }
+
+    }
+
 }
 
-impl Drawable for Lines<'_>
+impl Drawable for Lines
 {
     fn render(&self)
     {
@@ -69,7 +79,7 @@ impl Drawable for Lines<'_>
             gl::UseProgram(self.gl_shader_program_slot);
             gl::BindVertexArray(self.vao);
 
-            gl::DrawArrays(gl::LINE_LOOP, 0, self.vertices.len() as i32);
+            gl::DrawArrays(gl::LINE_STRIP, 0, self.vertices.len() as i32);
         }
 
     }
@@ -81,7 +91,7 @@ impl Drawable for Lines<'_>
     }
 }
 
-impl Drop for Lines<'_>
+impl Drop for Lines
 {
     fn drop(&mut self)
     {

@@ -5,15 +5,15 @@ use crate::rendering::glfwwindow::GLFWWindow;
 use glfw::Context;
 
 
-pub struct Renderer<'a>
+pub struct Renderer
 {
     stop_request: bool,
     window: GLFWWindow,
     shader_programs: Vec<ShaderProgram>,
-    pub drawables: Vec<Box<dyn Drawable + 'a>>
+    pub drawables: Vec<Box<dyn Drawable>>
 }
 
-impl<'a> Renderer<'a>
+impl Renderer
 {
     // TODO: Return actual errors
     pub fn try_new(width: u32, height: u32, title: &str) -> Result<Self, ()>
@@ -66,7 +66,7 @@ impl<'a> Renderer<'a>
 
 }
 
-impl Drop for Renderer<'_>
+impl Drop for Renderer
 {
     fn drop(&mut self)
     {
