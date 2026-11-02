@@ -59,13 +59,27 @@ impl Lines
 
     }
 
-    pub fn update_vertices(&self, indices: &[usize], new_values: &[Vec3])
+    pub fn update_all_vertices(&mut self, new_values: &[Vec3])
     {
-        // for index in indices
-        // {
-        //     self.vertices[]
-        // }
+        self.vertices = Box::from(new_values);
+        unsafe
+        {
+            gl::BufferData(
+                gl::ARRAY_BUFFER,
+                // I know, but there is NO WAY this fails
+                isize::try_from(size_of::<Vec3>() * self.vertices.len()).unwrap(),
+                self.vertices.as_ptr() as *const c_void,
+                gl::STATIC_DRAW);
 
+        }
+    }
+
+    pub fn update_vertices(&mut self, indices: &[usize], new_values: &[Vec3])
+    {
+    }
+
+    pub fn update_vertex(&mut self, index: usize, vertex: &Vec3)
+    {
     }
 
 }
@@ -81,7 +95,7 @@ impl Drawable for Lines
             gl::BindVertexArray(self.vao);
             gl::EnableVertexAttribArray(0);
 
-            gl::DrawArrays(gl::LINE_STRIP, 0, self.vertices.len() as i32);
+            gl::DrawArrays(gl::LINES, 0, self.vertices.len() as i32);
 
             gl::DisableVertexAttribArray(0);
             gl::BindVertexArray(0);

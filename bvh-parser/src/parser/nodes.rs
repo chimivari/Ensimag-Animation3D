@@ -184,9 +184,11 @@ impl HierarchyNode for Joint {
         edges: &mut Vec<Edge>,
         ip: usize,
     ) {
-        vertices.push(self.offset);
+
         edges.push(Edge::new(ip, vertices.len()));
         let ip = vertices.len();
+
+        vertices.push(self.offset);
         for child in &self.children {
             child.compute_initial_global_pos(vertices, edges, ip);
         }
@@ -245,8 +247,8 @@ impl HierarchyNode for End {
         edges: &mut Vec<Edge>,
         ip: usize,
     ) {
-        vertices.push(self.offset);
         edges.push(Edge::new(ip, vertices.len()));
+        vertices.push(self.offset);
     }
 
     fn compute_global_pos(
