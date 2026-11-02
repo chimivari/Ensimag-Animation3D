@@ -1,4 +1,7 @@
 use std::ffi::CStr;
+use gl::types::GLfloat;
+
+use crate::rendering::camera::Camera;
 
 pub enum ShaderSourceType
 {
@@ -60,6 +63,24 @@ impl ShaderProgram
                 gl_program_slot: shader_program
         })
     }
+
+    pub fn update_camera_uniforms(&mut self, camera: &Camera)
+    {
+        unsafe {
+            gl::UseProgram(self.gl_program_slot);
+
+            let view_loc = gl::GetUniformLocation(self.gl_program_slot, "view\0".as_ptr() as *const i8);
+
+            let proj_loc = gl::GetUniformLocation(self.gl_program_slot, "projection\0".as_ptr() as *const i8);
+
+            // Using &proj4.x_axis.x is valid because 
+            // let proj4 = camera.get_projection_mat4();
+            gl::UniformMatrix4fv(proj_loc, 1, gl::FALSE, &camera.get_projection_mat4().x_axis.x as *const GLfloat);
+            gl::UniformMatrix4fv(view_loc, 1, gl::FALSE, &camera.get_view_mat4().x_axis.x as *const GLfloat);
+        }
+
+    }
+
 }
 
 impl Drop for ShaderProgram
@@ -141,7 +162,6 @@ impl Shader
         let shader: u32;
         unsafe
         {
-            println!("{:?}", CStr::from_ptr(source_str_ptr));
             shader = gl::CreateShader(shader_type);
 
             gl::ShaderSource(

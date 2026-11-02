@@ -27,6 +27,7 @@ impl GLFWWindow
 
         window.make_current();
         window.set_key_polling(true);
+        glfw.set_swap_interval(glfw::SwapInterval::None);
 
         window.set_framebuffer_size_callback(framebuffer_size_callback);
         

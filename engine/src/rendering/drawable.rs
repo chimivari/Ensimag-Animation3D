@@ -77,9 +77,14 @@ impl Drawable for Lines
         unsafe
         {
             gl::UseProgram(self.gl_shader_program_slot);
+
             gl::BindVertexArray(self.vao);
+            gl::EnableVertexAttribArray(0);
 
             gl::DrawArrays(gl::LINE_STRIP, 0, self.vertices.len() as i32);
+
+            gl::DisableVertexAttribArray(0);
+            gl::BindVertexArray(0);
         }
 
     }

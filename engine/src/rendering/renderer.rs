@@ -1,6 +1,7 @@
 use crate::rendering::drawable::Drawable;
 use crate::rendering::shader::{ShaderConfig, ShaderProgram};
 use crate::rendering::glfwwindow::GLFWWindow;
+use crate::rendering::camera::Camera;
 
 use glfw::Context;
 
@@ -41,12 +42,17 @@ impl Renderer
         return self.stop_request || self.window.window.should_close();
     }
 
-    pub fn render(&mut self)
+    pub fn render(&mut self, camera: &Camera)
     {
         unsafe
         {
             gl::ClearColor(0.0, 0.0, 0.0, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
+        }
+
+        for shader in &mut self.shader_programs
+        {
+            shader.update_camera_uniforms(camera);
         }
 
         for drawable in &self.drawables
