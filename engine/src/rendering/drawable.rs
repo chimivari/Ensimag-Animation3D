@@ -11,8 +11,7 @@ pub trait Drawable
     fn bind_shader_program(&mut self, shader_program: &ShaderProgram);
 }
 
-pub struct Lines
-{
+pub struct Lines {
     gl_shader_program_slot: u32,
     vao: u32,
     vbo: u32,
@@ -39,7 +38,7 @@ impl Lines
                 // I know, but there is NO WAY this fails
                 isize::try_from(size_of::<Vec3>() * vertices.len()).unwrap(),
                 vertices.as_ptr() as *const c_void,
-                gl::STATIC_DRAW);
+                gl::DYNAMIC_DRAW);
             // Vertices
             
             gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, (3 * size_of::<f32>()) as i32, std::ptr::null());
@@ -64,12 +63,17 @@ impl Lines
         self.vertices = Box::from(new_values);
         unsafe
         {
+            // gl::BindVertexArray(self.vao);
+            // gl::EnableVertexAttribArray(0);
+
+            gl::BindBuffer(gl::ARRAY_BUFFER, self.vbo);
+
             gl::BufferData(
                 gl::ARRAY_BUFFER,
                 // I know, but there is NO WAY this fails
                 isize::try_from(size_of::<Vec3>() * self.vertices.len()).unwrap(),
                 self.vertices.as_ptr() as *const c_void,
-                gl::STATIC_DRAW);
+                gl::DYNAMIC_DRAW);
 
         }
     }
@@ -97,8 +101,8 @@ impl Drawable for Lines
 
             gl::DrawArrays(gl::LINES, 0, self.vertices.len() as i32);
 
-            gl::DisableVertexAttribArray(0);
-            gl::BindVertexArray(0);
+            // gl::DisableVertexAttribArray(0);
+            // gl::BindVertexArray(0);
         }
 
     }

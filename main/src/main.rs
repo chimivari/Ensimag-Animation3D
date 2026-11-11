@@ -1,3 +1,6 @@
+use std::rc::Rc;
+use std::cell::RefCell;
+
 use engine::clock::Clock;
 use engine::rendering::camera::Camera;
 use glam::Vec3;
@@ -22,7 +25,7 @@ fn main_renderer_test()
     let vertex_shader_path = "./resources/shaders/base.vert";
     let fragment_shader_path = "./resources/shaders/base.frag";
     
-    let mut renderer = Renderer::try_new(500, 400, "Kinematic animations").unwrap();
+    let mut renderer = Renderer::try_new(500, 300, "Kinematic animations").unwrap();
     
     let vertex_shader = ShaderConfig {
         name: "default vertex shader".to_string(),
@@ -36,54 +39,59 @@ fn main_renderer_test()
 
     let shader_program = renderer.create_shader_program(vertex_shader, fragment_shader).unwrap();
 
-    // Quad
-    let vertices: [Vec3; 8] = [
-        Vec3::new(-5., -5.0, 0.0),
-        Vec3::new( 5., -5.0, 0.0),
-        Vec3::new( 5., -5.0, 0.0),
-        Vec3::new( 5.,  5.0, 0.0),
-        Vec3::new( 5.,  5.0, 0.0),
-        Vec3::new(-5.,  5.0, 0.0),
-        Vec3::new(-5.,  5.0, 0.0),
-        Vec3::new(-5., -5.0, 0.0),
-    ];
-
-    // let lines = Box::new(Lines::new(&vertices, shader_program));
-    // renderer.drawables.push(lines);
-    
     let bvh_file = std::fs::read_to_string("inputs/walk1.bvh").unwrap();
     let bvh = parse(bvh_file).unwrap();
     
-    // \_(-_-)_/
-    let skelett_vertices = bvh.roots[0].frames[1].vertices.clone();
-    // let skelett_vertices: Vec<Vec3> = skelett_vertices.into_iter().map(|v| Vec3::from(v)).collect();
-
-    let mut skelett_lines: Vec<Vec3> = Vec::new();
-    for segment in &bvh.roots[0].edges
-    {
-        println!("{}, {}", segment.iv1, segment.iv2);
-        println!("{}, {}", skelett_vertices[segment.iv1], skelett_vertices[segment.iv2]);
-        skelett_lines.push(Vec3::from(skelett_vertices[segment.iv1])/50.0);
-        skelett_lines.push(Vec3::from(skelett_vertices[segment.iv2])/50.0);
+    // Contains lines for each animation frame
+    let mut skelett_lines: Vec<Vec<Vec3>> = Vec::new();
+    for frame in &bvh.roots[0].frames{
+        let mut lines: Vec<Vec3> = Vec::new();
+        for segment in &bvh.roots[0].edges
+        {
+            lines.push(Vec3::from(frame.vertices[segment.iv1])/50.0);
+            lines.push(Vec3::from(frame.vertices[segment.iv2])/50.0);
+        }
+        skelett_lines.push(lines);
     }
     
-    let skelett = Box::new(Lines::new(&skelett_lines, shader_program));
-    renderer.drawables.push(skelett);
+    let mut skelett = Rc::new(RefCell::new(Lines::new(&skelett_lines[1], shader_program)));
+    renderer.drawables.push(skelett.clone());
 
 
     let mut camera = Camera::new();
 
     let mut clock = Clock::new();
 
+    let camera_distance = 30.0;
+
+    let animation_frame_delta = 1.0/24.0;
+    let mut next_frame_time = clock.get_total_time() + animation_frame_delta;
+    let mut frame_index = 0;
+
     while !renderer.stop_requested()
     {
-        let delta_time = clock.start_next_iteration();
+        let _delta_time = clock.start_next_iteration();
+        let current_time = clock.get_total_time();
+
+        // Rotate camera over time
+        let dtheta = current_time * 2.0;
+        camera.position = camera_distance * Vec3 { x: dtheta.sin(), y: 0.5, z: dtheta.cos() };
+
+        if current_time > next_frame_time
+        {
+            println!("{}", frame_index);
+            next_frame_time = current_time + animation_frame_delta;
+            // The first frame isn't an actual frame but just the default pose.
+            //  => there are n-1 frames, and indices start at 1
+            frame_index = ((frame_index + 1) % (skelett_lines.len() - 1)) + 1;
+
+            skelett.borrow_mut().update_all_vertices(
+                &skelett_lines[frame_index]
+                );
+        }
+
 
         renderer.render(&camera);
-
-        let dtheta = clock.get_total_time() * 2.0;
-
-        camera.position = 50.0 * Vec3 { x: dtheta.sin(), y: 0.0, z: dtheta.cos() };
 
         renderer.flush_events();
     }

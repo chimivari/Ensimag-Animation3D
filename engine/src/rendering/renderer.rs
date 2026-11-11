@@ -1,3 +1,6 @@
+use std::rc::Rc;
+use std::cell::RefCell;
+
 use crate::rendering::drawable::Drawable;
 use crate::rendering::shader::{ShaderConfig, ShaderProgram};
 use crate::rendering::glfwwindow::GLFWWindow;
@@ -11,7 +14,7 @@ pub struct Renderer
     stop_request: bool,
     window: GLFWWindow,
     shader_programs: Vec<ShaderProgram>,
-    pub drawables: Vec<Box<dyn Drawable>>
+    pub drawables: Vec<Rc<RefCell<dyn Drawable>>>
 }
 
 impl Renderer
@@ -57,7 +60,7 @@ impl Renderer
 
         for drawable in &self.drawables
         {
-            drawable.render();
+            drawable.borrow().render();
         }
 
         self.window.window.swap_buffers();
@@ -69,7 +72,6 @@ impl Renderer
         self.window.glfw.poll_events();
         glfw::flush_messages(&self.window.events);
     }
-
 }
 
 impl Drop for Renderer
