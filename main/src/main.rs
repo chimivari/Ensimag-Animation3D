@@ -3,6 +3,7 @@ use std::cell::RefCell;
 
 use engine::clock::Clock;
 use engine::rendering::camera::Camera;
+// use engine::resource::meshloader::mesh_from_off_string;
 use glam::Vec3;
 
 use bvh_parser::prelude::*;
@@ -38,6 +39,9 @@ fn main_renderer_test()
     };
 
     let shader_program = renderer.create_shader_program(vertex_shader, fragment_shader).unwrap();
+
+    // Crash in case of IOError
+    // let skin = mesh_from_off_string(std::fs::read_to_string("./resources/skin.off").unwrap());
 
     let bvh_file = std::fs::read_to_string("inputs/walk1.bvh").unwrap();
     let bvh = parse(bvh_file).unwrap();
@@ -79,7 +83,6 @@ fn main_renderer_test()
 
         if current_time > next_frame_time
         {
-            println!("{}", frame_index);
             next_frame_time = current_time + animation_frame_delta;
             // The first frame isn't an actual frame but just the default pose.
             //  => there are n-1 frames, and indices start at 1

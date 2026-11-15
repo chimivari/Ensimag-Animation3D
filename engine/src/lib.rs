@@ -4,3 +4,4 @@ extern crate gl;
 pub mod rendering;
 pub mod clock;
 pub mod core;
+pub mod resource;
