@@ -38,13 +38,9 @@ impl Transform {
         Vertex::new(x, y, z)
     }
 
-    // pub fn to_mat4(&self) -> Mat4 {
-    //     Mat4::from_scale_rotation_translation(
-    //         self.scale.to_vec3(),
-    //         self.rotation,
-    //         self.translation.to_vec3(),
-    //     )
-    // }
+    pub fn to_mat4(&self) -> Mat4 {
+        Mat4::from_scale_rotation_translation(self.scale, self.rotation, self.translation)
+    }
 
     pub fn set_translation(&mut self, translation: Vec3) {
         self.translation = translation;
