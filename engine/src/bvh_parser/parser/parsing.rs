@@ -1,5 +1,5 @@
-use crate::lexer::lex::LexerBVH;
-use crate::lexer::tokens::TokenBVH;
+use crate::bvh_parser::lexer::lex::LexerBVH;
+use crate::bvh_parser::lexer::tokens::TokenBVH;
 
 use super::ParsingError;
 use super::nodes::*;
@@ -21,14 +21,12 @@ impl ParserBVH {
         if !Self::try_parse_const(&mut it, TokenBVH::Hierarchy) {
             Err(ParsingError::new("Hierarchy missing"))?
         }
-        let mut hierarchy = Hierarchy::default();
 
-        loop {
-            match Self::parse_root(&mut it) {
-                Ok(Some(root)) => hierarchy.add_root(root),
-                Ok(None) => break,
-                Err(err) => Err(err)?,
-            }
+        let root = Self::parse_root(&mut it)?;
+        let hierarchy = Hierarchy::new(root);
+
+        if Self::parse_root(&mut it).is_ok() {
+            panic!("Parser doesn't support multiple roots");
         }
 
         // Parse Motion
@@ -40,10 +38,10 @@ impl ParserBVH {
         Ok(Self { hierarchy, motion })
     }
 
-    fn parse_root(it: &mut Peekable) -> Result<Option<Root>, ParsingError> {
+    fn parse_root(it: &mut Peekable) -> Result<BvhRoot, ParsingError> {
         // Parse ROOT
         if !Self::try_parse_const(it, TokenBVH::Root) {
-            return Ok(None);
+            Err(ParsingError::new("ROOT missing"))?;
         }
 
         // Parse root data
@@ -52,12 +50,12 @@ impl ParserBVH {
             _ => Err(ParsingError::new("ROOT name not found"))?,
         };
         if !Self::try_parse_const(it, TokenBVH::OpenBrace) {
-            Err(ParsingError::new("Root misses an open brace"))?
+            Err(ParsingError::new("ROOT misses an open brace"))?
         }
         let offset = Self::parse_offset(it)?;
         let channels = Self::parse_channels(it)?;
 
-        let mut root = Root::new(name, offset, channels);
+        let mut root = BvhRoot::new(name, offset, channels);
 
         // Parse joint nodes
         loop {
@@ -81,10 +79,10 @@ impl ParserBVH {
             Err(ParsingError::new("Root misses a closed brace"))?
         }
 
-        Ok(Some(root))
+        Ok(root)
     }
 
-    fn parse_joint(it: &mut Peekable) -> Result<Option<Joint>, ParsingError> {
+    fn parse_joint(it: &mut Peekable) -> Result<Option<BvhJoint>, ParsingError> {
         // Parse JOINT
         if !Self::try_parse_const(it, TokenBVH::Joint) {
             return Ok(None);
@@ -100,7 +98,7 @@ impl ParserBVH {
         let offset = Self::parse_offset(it)?;
         let channels = Self::parse_channels(it)?;
 
-        let mut joint = Joint::new(name, offset, channels);
+        let mut joint = BvhJoint::new(name, offset, channels);
 
         // Parse children joints
         loop {
@@ -126,7 +124,7 @@ impl ParserBVH {
         Ok(Some(joint))
     }
 
-    fn parse_end(it: &mut Peekable) -> Result<Option<End>, ParsingError> {
+    fn parse_end(it: &mut Peekable) -> Result<Option<BvhEnd>, ParsingError> {
         // Parse End
         if !Self::try_parse_const(it, TokenBVH::End) {
             return Ok(None);
@@ -140,7 +138,7 @@ impl ParserBVH {
             Err(ParsingError::new("End misses an open brace"))?
         }
         let offset = Self::parse_offset(it)?;
-        let end = End::new(name, offset);
+        let end = BvhEnd::new(name, offset);
 
         if !Self::try_parse_const(it, TokenBVH::CloseBrace) {
             Err(ParsingError::new("End misses a closed brace"))?

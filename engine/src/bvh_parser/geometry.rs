@@ -18,5 +18,3 @@ impl Edge {
         Self { iv1, iv2 }
     }
 }
-
-pub type Vertex = glam::Vec3A;

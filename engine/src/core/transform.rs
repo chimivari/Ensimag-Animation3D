@@ -1,28 +1,50 @@
 use super::Component;
 use crate::prelude::*;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Transform {
-    pub parent: Option<Entity>,
-    pub children: Vec<Entity>,
     pub translation: Vec3,
     pub scale: Vec3,
     pub rotation: Quat,
 }
 
+impl Default for Transform {
+    fn default() -> Self {
+        Self {
+            translation: Vec3::ZERO,
+            scale: Vec3::ONE,
+            rotation: Quat::IDENTITY,
+        }
+    }
+}
+
 impl Transform {
+    pub fn from_translation(t: Vec3) -> Self {
+        Self {
+            translation: t,
+            ..Default::default()
+        }
+    }
+
+    pub fn from_rotation(q: Quat) -> Self {
+        Self {
+            rotation: q,
+            ..Default::default()
+        }
+    }
+
     pub fn rotation_euler(&self) -> Vec3 {
         let (x, y, z) = self.rotation.to_euler(glam::EulerRot::XYZ);
         Vertex::new(x, y, z)
     }
 
-    pub fn to_mat4(&self) -> Mat4 {
-        Mat4::from_scale_rotation_translation(
-            self.scale.to_vec3(),
-            self.rotation,
-            self.translation.to_vec3(),
-        )
-    }
+    // pub fn to_mat4(&self) -> Mat4 {
+    //     Mat4::from_scale_rotation_translation(
+    //         self.scale.to_vec3(),
+    //         self.rotation,
+    //         self.translation.to_vec3(),
+    //     )
+    // }
 
     pub fn set_translation(&mut self, translation: Vec3) {
         self.translation = translation;

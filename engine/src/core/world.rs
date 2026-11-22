@@ -1,12 +1,17 @@
 use std::{
     any::{Any, TypeId},
     collections::{HashMap, VecDeque},
+    fmt::Debug,
     hash::Hash,
     iter::Zip,
     slice::{Iter, IterMut},
     thread::sleep,
     time::{Duration, Instant},
 };
+
+pub trait IEntity: Copy + Clone + PartialEq + Eq + Debug {}
+
+impl IEntity for usize {}
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct Entity {
@@ -20,6 +25,8 @@ impl Entity {
         Entity { id, generation }
     }
 }
+
+impl IEntity for Entity {}
 
 impl Hash for Entity {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
@@ -45,6 +52,35 @@ pub trait Storage: Any {
 pub trait Component: 'static {
     fn type_id() -> TypeId {
         TypeId::of::<Self>()
+    }
+}
+
+pub trait BundleComponent: 'static {
+    fn add_components_to(world: &mut World, entity: Entity, components: Self);
+}
+
+impl BundleComponent for () {
+    fn add_components_to(_world: &mut World, _entity: Entity, _no_component: Self) {}
+}
+
+impl<T: Component> BundleComponent for T {
+    fn add_components_to(world: &mut World, entity: Entity, component: T) {
+        world.add_component_to(entity, component);
+    }
+}
+
+impl<T1: Component, T2: Component> BundleComponent for (T1, T2) {
+    fn add_components_to(world: &mut World, entity: Entity, components: (T1, T2)) {
+        world.add_component_to(entity, components.0);
+        world.add_component_to(entity, components.1);
+    }
+}
+
+impl<T1: Component, T2: Component, T3: Component> BundleComponent for (T1, T2, T3) {
+    fn add_components_to(world: &mut World, entity: Entity, components: (T1, T2, T3)) {
+        world.add_component_to(entity, components.0);
+        world.add_component_to(entity, components.1);
+        world.add_component_to(entity, components.2);
     }
 }
 
@@ -228,7 +264,16 @@ impl World {
         }
     }
 
-    pub fn spawn<C: Component>(&mut self, component: C) -> Entity {
+    pub fn spawn_with<B: BundleComponent>(&mut self, components: B) -> Entity {
+        // Generate entity
+        let entity = self.spawn();
+        // Add component to the entity
+        B::add_components_to(self, entity, components);
+
+        entity
+    }
+
+    pub fn spawn(&mut self) -> Entity {
         let id = if let Some(recycled) = self.free_ids.pop_front() {
             recycled
         } else {
@@ -244,17 +289,7 @@ impl World {
         let generation = self.generations[id as usize];
         self.alive_count += 1;
 
-        let entity = Entity::new(id, generation);
-
-        self.components
-            .entry(C::type_id())
-            .or_insert(Box::new(ComponentStorage::<C>::default()))
-            .as_any_mut()
-            .downcast_mut::<ComponentStorage<C>>()
-            .unwrap()
-            .add_component(entity, component);
-
-        entity
+        Entity::new(id, generation)
     }
 
     pub fn delete(&mut self, entity: Entity) -> bool {
@@ -288,6 +323,20 @@ impl World {
             Scheduler::Quit => self.quit_systems.push(system),
         }
         self
+    }
+
+    pub fn add_component_to<C: Component>(&mut self, entity: Entity, component: C) {
+        self.components
+            .entry(C::type_id())
+            .or_insert(Box::new(ComponentStorage::<C>::default()))
+            .as_any_mut()
+            .downcast_mut::<ComponentStorage<C>>()
+            .unwrap()
+            .add_component(entity, component);
+    }
+
+    pub fn add_components_to<B: BundleComponent>(&mut self, entity: Entity, components: B) {
+        B::add_components_to(self, entity, components);
     }
 
     pub fn get_entity_component<C: Component>(&self, entity: &Entity) -> Option<&C> {

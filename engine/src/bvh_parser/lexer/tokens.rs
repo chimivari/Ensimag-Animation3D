@@ -1,5 +1,4 @@
-use crate::geometry::Axis;
-
+use crate::bvh_parser::geometry::Axis;
 #[derive(Debug, PartialEq)]
 pub enum TokenBVH {
     // Const keywords
