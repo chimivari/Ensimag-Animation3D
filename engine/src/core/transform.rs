@@ -35,7 +35,7 @@ impl Transform {
 
     pub fn rotation_euler(&self) -> Vec3 {
         let (x, y, z) = self.rotation.to_euler(glam::EulerRot::XYZ);
-        Vertex::new(x, y, z)
+        Vec3::new(x, y, z)
     }
 
     pub fn to_mat4(&self) -> Mat4 {

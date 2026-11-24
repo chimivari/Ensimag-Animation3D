@@ -18,7 +18,7 @@ impl Hierarchy {
 #[derive(Debug)]
 pub struct BvhRoot {
     pub _name: String,
-    pub offset: Vertex,
+    pub offset: Vec3,
     pub channels: Vec<Channel>,
     pub children: Vec<Box<dyn HierarchyNode>>,
 }
@@ -38,7 +38,7 @@ impl BvhRoot {
         }
         Self {
             _name,
-            offset: Vertex::from_array(offset),
+            offset: Vec3::from_array(offset),
             channels,
             children: Vec::new(),
         }
@@ -109,7 +109,7 @@ pub(crate) trait HierarchyNode: Debug {
 #[derive(Debug)]
 pub struct BvhJoint {
     pub _name: String,
-    pub offset: Vertex,
+    pub offset: Vec3,
     pub channels: Vec<Channel>,
     pub children: Vec<Box<dyn HierarchyNode>>,
 }
@@ -123,7 +123,7 @@ impl BvhJoint {
         }
         Self {
             _name,
-            offset: Vertex::from_array(offset),
+            offset: Vec3::from_array(offset),
             channels,
             children: Vec::new(),
         }
@@ -166,13 +166,13 @@ impl HierarchyNode for BvhJoint {
 #[derive(Debug)]
 pub struct BvhEnd {
     pub _name: String,
-    pub offset: Vertex,
+    pub offset: Vec3,
 }
 impl BvhEnd {
     pub fn new(_name: String, offset: [f32; 3]) -> Self {
         Self {
             _name,
-            offset: Vertex::from_array(offset),
+            offset: Vec3::from_array(offset),
         }
     }
 }
@@ -219,8 +219,8 @@ fn take_record(motion: &mut VecDeque<f32>) -> f32 {
         .expect("Missing a record in the MOTION section")
 }
 
-fn take_position_records(motion: &mut VecDeque<f32>) -> Vertex {
-    Vertex::new(
+fn take_position_records(motion: &mut VecDeque<f32>) -> Vec3 {
+    Vec3::new(
         take_record(motion),
         take_record(motion),
         take_record(motion),
