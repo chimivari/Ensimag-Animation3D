@@ -9,8 +9,10 @@ pub mod prelude {
         joint::{Joint, JointRecord, JointRecordsQueue},
         skeleton::Skeleton,
         transform::Transform,
-        world::{Scheduler, World},
+        world::{Component, Scheduler, World},
     };
+
+    pub use crate::clock::Clock;
 
     pub use glam::*;
 

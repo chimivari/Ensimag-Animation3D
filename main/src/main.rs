@@ -102,10 +102,9 @@ fn main() {
     let bvh_file = std::fs::read_to_string("inputs/Example1.bvh").unwrap();
     let bvh = parse(bvh_file).unwrap();
 
-    let frame_time = bvh.frame_time();
     let skeleton = Skeleton::new(bvh);
 
-    let mut world = World::new(frame_time as f64);
+    let mut world = World::default();
     world.spawn_with(skeleton);
 
     world
@@ -113,8 +112,8 @@ fn main() {
         .run();
 }
 
-fn compute_next_frame(world: &mut World) {
-    for (e, skeleton) in world.iter_component_mut::<Skeleton>().unwrap() {
+fn compute_next_frame(world: &mut World, _clock: &Clock) {
+    for (_e, skeleton) in world.iter_component_mut::<Skeleton>().unwrap() {
         skeleton.compute_next_frame();
     }
 }

@@ -1,3 +1,4 @@
+use crate::clock::Clock;
 use std::{
     any::{Any, TypeId},
     collections::{HashMap, VecDeque},
@@ -5,8 +6,6 @@ use std::{
     hash::Hash,
     iter::Zip,
     slice::{Iter, IterMut},
-    thread::sleep,
-    time::{Duration, Instant},
 };
 
 pub trait IEntity: Copy + Clone + PartialEq + Eq + Debug {}
@@ -35,7 +34,7 @@ impl Hash for Entity {
     }
 }
 
-type System = fn(&mut World);
+type System = fn(&mut World, &Clock);
 
 pub enum Scheduler {
     Startup,
@@ -228,6 +227,7 @@ impl<T: Component> Storage for ComponentStorage<T> {
     }
 }
 
+#[derive(Default)]
 pub struct World {
     next_id: u32,
     generations: Vec<u32>,
@@ -235,8 +235,6 @@ pub struct World {
     alive_count: usize,
 
     components: HashMap<TypeId, Box<dyn Storage>>,
-
-    frame_rate_ms: f64,
 
     startup_systems: Vec<System>,
     update_systems: Vec<System>,
@@ -246,24 +244,6 @@ pub struct World {
 }
 
 impl World {
-    pub fn new(frame_rate_ms: f64) -> Self {
-        if frame_rate_ms <= 0.0 {
-            panic!("Frame rate could be equal or less than 0.0");
-        }
-        Self {
-            next_id: 0,
-            generations: Vec::new(),
-            free_ids: VecDeque::new(),
-            alive_count: 0,
-            frame_rate_ms,
-            startup_systems: Vec::new(),
-            update_systems: Vec::new(),
-            quit_systems: Vec::new(),
-            is_running: false,
-            components: HashMap::new(),
-        }
-    }
-
     pub fn spawn_with<B: BundleComponent>(&mut self, components: B) -> Entity {
         // Generate entity
         let entity = self.spawn();
@@ -394,36 +374,29 @@ impl World {
 
     pub fn run(&mut self) {
         self.is_running = true;
+        let clock = Clock::new();
         // Run startup systems
+
         let startup_systems = std::mem::take(&mut self.startup_systems);
 
         for system in &startup_systems {
-            system(self);
+            system(self, &clock);
         }
 
         // Run update systems while the world is running
         let update_systems = std::mem::take(&mut self.update_systems);
 
-        let frame_rate_sec = self.frame_rate_ms * 1e-3;
         while self.is_running {
-            let now = Instant::now();
-
             for system in &update_systems {
-                system(self);
+                system(self, &clock);
             }
-
-            let elapsed_time = now.elapsed().as_secs_f64();
-            sleep(Duration::from_secs_f64(f64::max(
-                0.0,
-                frame_rate_sec - elapsed_time,
-            )));
         }
 
         // Once the world stopped to run, run quit systems
         let quit_systems = std::mem::take(&mut self.quit_systems);
 
         for system in &quit_systems {
-            system(self);
+            system(self, &clock);
         }
 
         self.startup_systems = startup_systems;

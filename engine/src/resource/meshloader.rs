@@ -76,7 +76,7 @@ fn parse(tokens: Vec<TokenOff>) -> Result<(Vec<Vec3>, Vec<UVec3>), ParsingError>
     let mut faces = Vec::with_capacity(n_faces);
     for _ in 0..n_faces {
         let f = it.parse_face()?;
-        triangulize(f, &mut faces);
+        triangulize(f, &mut faces)?;
     }
 
     Ok((vertices, faces))
