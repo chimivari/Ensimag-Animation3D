@@ -135,30 +135,46 @@ pub struct Mesh {
 }
 
 #[repr(C)]
-struct NormalVertex
+struct AugmentedVertex
 {
     vertex: Vec3,
     normal: Vec3
 }
 
-fn compute_normals(vertices: &Vec<Vec3>, faces: &Vec<UVec3>) -> Vec<NormalVertex>
+fn compute_vec3_running_average(avg: &Vec3, x: &Vec3, n: u8) -> Vec3
 {
-    let res: Vec<NormalVertex> = Vec::with_capacity(vertices.len());
-    let count: Vec<u8> = Vec::with_capacity(vertices.len());
+    (((avg * n as f32) + x) / ((n + 1) as f32))
+}
 
-    let mut face_normals = Vec::with_capacity(faces.len());
+fn compute_mesh_per_vertex_normals(vertices: &Vec<Vec3>, faces: &Vec<UVec3>) -> Vec<AugmentedVertex>
+{
+    let mut res: Vec<AugmentedVertex> = vertices.into_iter()
+        .map(|v| AugmentedVertex { vertex: *v, normal: Vec3 { x: 1.0, y : 0.5, z: 0.0} })
+        .collect();
+    // Count of all faces touching a vertex
+    let mut count: Vec<u8> = vec![0; vertices.len()];
 
-    for (i, face) in faces.into_iter().enumerate()
+    for face in faces
     {
         let u = vertices[face.x as usize];
         let v = vertices[face.y as usize];
         let w = vertices[face.z as usize];
 
-        face_normals[i] = (u - v).cross(u - w);
-    }
+        let face_normal = (u - v).cross(u - w).normalize();
 
-    // TODO:
-    
+        // Update normal average for all vertices
+        res[face.x as usize].normal = compute_vec3_running_average(
+            &res[face.x as usize].normal, &face_normal, count[face.x as usize]);
+        count[face.x as usize] += 1;
+
+        res[face.y as usize].normal = compute_vec3_running_average(
+            &res[face.y as usize].normal, &face_normal, count[face.y as usize]);
+        count[face.y as usize] += 1;
+
+        res[face.z as usize].normal = compute_vec3_running_average(
+            &res[face.z as usize].normal, &face_normal, count[face.z as usize]);
+        count[face.z as usize] += 1;
+    }
 
     res
 }
@@ -170,6 +186,10 @@ impl Mesh {
         let mut vbo: u32 = u32::MAX;
         let mut ebo: u32 = u32::MAX;
 
+        let vertices = compute_mesh_per_vertex_normals(&vertices, &faces);
+
+        println!("- {}", size_of::<AugmentedVertex>());
+
         unsafe {
             gl::GenVertexArrays(1, &mut vao);
             gl::GenBuffers(1, &mut vbo);
@@ -177,11 +197,10 @@ impl Mesh {
 
             gl::BindVertexArray(vao);
             gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
-            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
 
             gl::BufferData(
                 gl::ARRAY_BUFFER,
-                isize::try_from(size_of::<Vec3>() * vertices.len()).unwrap(),
+                isize::try_from(size_of::<AugmentedVertex>() * vertices.len()).unwrap(),
                 vertices.as_ptr() as *const c_void,
                 gl::STATIC_DRAW,
             );
@@ -191,9 +210,24 @@ impl Mesh {
                 3,
                 gl::FLOAT,
                 gl::FALSE,
-                (3 * size_of::<f32>()) as i32,
+                size_of::<AugmentedVertex>() as i32,
                 std::ptr::null(),
             );
+            gl::EnableVertexAttribArray(0);
+
+            gl::VertexAttribPointer(
+                1,
+                3,
+                gl::FLOAT,
+                gl::TRUE,
+                size_of::<AugmentedVertex>() as i32,
+                std::mem::offset_of!(AugmentedVertex, normal) as *const c_void
+            );
+            gl::EnableVertexAttribArray(1);
+
+            println!("{}", std::mem::offset_of!(AugmentedVertex, normal));
+
+            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
 
             gl::BufferData(
                 gl::ELEMENT_ARRAY_BUFFER,
@@ -202,7 +236,6 @@ impl Mesh {
                 gl::STATIC_DRAW,
             );
 
-            gl::EnableVertexAttribArray(0);
 
             // unbind vao
             gl::BindVertexArray(0);
@@ -226,7 +259,8 @@ impl Drawable for Mesh {
             gl::UseProgram(self.gl_shader_program_slot);
 
             gl::BindVertexArray(self.vao);
-            gl::EnableVertexAttribArray(0);
+            // gl::EnableVertexAttribArray(0);
+            // gl::EnableVertexAttribArray(1);
 
             gl::DrawElements(
                 gl::TRIANGLES,
