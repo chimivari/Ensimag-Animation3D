@@ -54,6 +54,12 @@ impl JointRecord {
             transform: Transform::from_rotation(quat),
         }
     }
+
+    pub fn from_translation_rotation(t: Vec3, q: Quat) -> Self {
+        Self {
+            transform: Transform::from_translation_rotation(t, q),
+        }
+    }
 }
 
 #[derive(Default, Clone, Debug)]

@@ -1,4 +1,4 @@
-mod bvh;
+pub mod bvh;
 pub mod geometry;
 mod lexer;
 mod parser;
@@ -7,7 +7,7 @@ use std::fmt::Debug;
 use lexer::lex::LexerBVH;
 use parser::parsing::ParserBVH;
 
-use bvh::Bvh;
+pub use bvh::Bvh;
 
 #[derive(Debug)]
 pub enum BVHError {

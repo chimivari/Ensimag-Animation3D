@@ -62,20 +62,13 @@ impl BvhRoot {
         joint_records: &mut [JointRecordsQueue],
         records: &mut VecDeque<f32>,
     ) {
-        let translaton = take_position_records(records);
+        let translaton = take_position_records(records) + self.offset;
         let rotation = take_rotation_records(records, &self.channels[3..]);
 
-        let root_translation = JointRecord::from_translation(translaton);
-        joint_records[0].push(root_translation);
+        let transform = JointRecord::from_translation_rotation(translaton, rotation);
+        joint_records[0].push(transform);
 
-        if self.children.is_empty() {
-            return;
-        }
-
-        let joint_rotation = JointRecord::from_rotation(rotation);
-        joint_records[1].push(joint_rotation);
-
-        let mut n = 1;
+        let mut n = 0;
 
         for child in &self.children {
             child.compute_next_local_pose(joint_records, records, &mut n);
@@ -155,7 +148,10 @@ impl HierarchyNode for BvhJoint {
     ) {
         *n += 1;
         let rotation = take_rotation_records(records, &self.channels);
-        joint_records[*n].push(JointRecord::from_rotation(rotation));
+        joint_records[*n].push(JointRecord::from_translation_rotation(
+            self.offset,
+            rotation,
+        ));
 
         for child in &self.children {
             child.compute_next_local_pose(joint_records, records, n);
@@ -186,10 +182,12 @@ impl HierarchyNode for BvhEnd {
 
     fn compute_next_local_pose(
         &self,
-        _joint_records: &mut [JointRecordsQueue],
+        joint_records: &mut [JointRecordsQueue],
         _records: &mut VecDeque<f32>,
-        _n: &mut usize,
+        n: &mut usize,
     ) {
+        *n += 1;
+        joint_records[*n].push(JointRecord::from_translation(self.offset));
     }
 }
 

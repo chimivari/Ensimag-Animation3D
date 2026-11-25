@@ -7,6 +7,7 @@ pub mod resource;
 pub mod prelude {
     pub use crate::core::{
         joint::{Joint, JointRecord, JointRecordsQueue},
+        skeleton::Skeleton,
         transform::Transform,
         world::{Scheduler, World},
     };

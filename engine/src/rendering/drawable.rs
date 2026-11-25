@@ -132,7 +132,6 @@ pub struct Mesh {
 
 impl Mesh {
     pub fn new(vertices: Vec<Vec3>, faces: Vec<UVec3>, shader: &ShaderProgram) -> Self {
-        compile_error!("Replace u16 to UVec3 in the pipeline");
         let mut vao: u32 = u32::MAX;
         let mut vbo: u32 = u32::MAX;
         let mut ebo: u32 = u32::MAX;

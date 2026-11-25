@@ -33,6 +33,14 @@ impl Transform {
         }
     }
 
+    pub fn from_translation_rotation(t: Vec3, q: Quat) -> Self {
+        Self {
+            rotation: q,
+            translation: t,
+            ..Default::default()
+        }
+    }
+
     pub fn rotation_euler(&self) -> Vec3 {
         let (x, y, z) = self.rotation.to_euler(glam::EulerRot::XYZ);
         Vec3::new(x, y, z)

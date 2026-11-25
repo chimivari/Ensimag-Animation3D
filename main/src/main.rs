@@ -100,34 +100,13 @@ fn main() {
     // main_renderer_test();
 
     let bvh_file = std::fs::read_to_string("inputs/Example1.bvh").unwrap();
-    let mut bvh = parse(bvh_file).unwrap();
+    let bvh = parse(bvh_file).unwrap();
 
-    let mut world = World::new(bvh.frame_time() as f64);
+    let frame_time = bvh.frame_time();
+    let skeleton = Skeleton::new(bvh);
 
-    // Spawn 1 entity per joint
-    let joints = bvh.generate_components();
-    let entities = joints.iter().map(|_| world.spawn()).collect::<Vec<_>>();
-
-    // Add components to each entity
-    joints
-        .into_iter()
-        .zip(entities.iter())
-        .for_each(|((joint, joint_records), &entity)| {
-            let Joint {
-                parent,
-                children,
-                transform,
-            } = joint;
-
-            let parent = parent.map(|i| entities[i]);
-            let children = children
-                .into_iter()
-                .map(|i| entities[i])
-                .collect::<Vec<_>>();
-
-            let joint = Joint::new_with_children(parent, transform, children);
-            world.add_components_to(entity, (joint, joint_records));
-        });
+    let mut world = World::new(frame_time as f64);
+    world.spawn_with(skeleton);
 
     world
         .add_system(Scheduler::Update, compute_next_frame)
@@ -135,21 +114,7 @@ fn main() {
 }
 
 fn compute_next_frame(world: &mut World) {
-    let mut transforms = VecDeque::new();
-
-    for (&e, records) in world.iter_component_mut::<JointRecordsQueue>().unwrap() {
-        if let Some(record) = records.pop() {
-            transforms.push_back((e, record));
-        } else if !transforms.is_empty() {
-            panic!("Every joint should have the same number of records");
-        }
+    for (e, skeleton) in world.iter_component_mut::<Skeleton>().unwrap() {
+        skeleton.compute_next_frame();
     }
-
-    for (&e1, joint) in world.iter_component_mut::<Joint<Entity>>().unwrap() {
-        let (e2, record) = transforms.pop_front().unwrap();
-        assert_eq!(e1, e2);
-        joint.transform = record.transform;
-    }
-
-    assert!(transforms.is_empty());
 }
