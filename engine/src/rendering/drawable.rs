@@ -134,6 +134,35 @@ pub struct Mesh {
     // Mesh information is stored on the GPU
 }
 
+#[repr(C)]
+struct NormalVertex
+{
+    vertex: Vec3,
+    normal: Vec3
+}
+
+fn compute_normals(vertices: &Vec<Vec3>, faces: &Vec<UVec3>) -> Vec<NormalVertex>
+{
+    let res: Vec<NormalVertex> = Vec::with_capacity(vertices.len());
+    let count: Vec<u8> = Vec::with_capacity(vertices.len());
+
+    let mut face_normals = Vec::with_capacity(faces.len());
+
+    for (i, face) in faces.into_iter().enumerate()
+    {
+        let u = vertices[face.x as usize];
+        let v = vertices[face.y as usize];
+        let w = vertices[face.z as usize];
+
+        face_normals[i] = (u - v).cross(u - w);
+    }
+
+    // TODO:
+    
+
+    res
+}
+
 impl Mesh {
     pub fn new(vertices: Vec<Vec3>, faces: Vec<UVec3>, shader: &ShaderProgram) -> Self {
         // compile_error!("Replace u16 to UVec3 in the pipeline");
