@@ -1,7 +1,11 @@
 use std::rc::Rc;
 use std::cell::RefCell;
+use crate::prelude::*;
 
-use crate::rendering::drawable::Drawable;
+use crate::core::Component;
+
+use crate::core::world::World;
+use crate::rendering::drawable::{Drawable, Lines, Mesh};
 use crate::rendering::shader::{ShaderConfig, ShaderProgram};
 use crate::rendering::glfwwindow::GLFWWindow;
 use crate::rendering::camera::Camera;
@@ -14,8 +18,8 @@ pub struct Renderer
     stop_request: bool,
     window: GLFWWindow,
     shader_programs: Vec<ShaderProgram>,
-    pub drawables: Vec<Rc<RefCell<dyn Drawable>>>
 }
+
 
 impl Renderer
 {
@@ -26,7 +30,6 @@ impl Renderer
             stop_request: false,
             window: GLFWWindow::try_new(width, height, title)?,
             shader_programs: Vec::new(),
-            drawables: Vec::new()
         })
     }
 
@@ -45,24 +48,59 @@ impl Renderer
         return self.stop_request || self.window.window.should_close();
     }
 
-    pub fn render(&mut self, camera: &Camera)
+    pub fn start(&self)
     {
         unsafe
         {
+            // Depth testing & buffer
+            gl::Enable(gl::DEPTH_TEST);
+            gl::DepthFunc(gl::LEQUAL);
+            // Enable culling
+            gl::Enable(gl::CULL_FACE);
+            // Setup alpha blending
+            gl::Enable(gl::BLEND);
+            gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+
             gl::ClearColor(0.0, 0.0, 0.0, 1.0);
-            gl::Clear(gl::COLOR_BUFFER_BIT);
+            gl::ClearDepth(1.0);
         }
+    }
 
-        for shader in &mut self.shader_programs
+    pub fn render(&self, world: &World)
+    {
+        unsafe
         {
-            shader.update_camera_uniforms(camera);
+            gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
         }
 
-        for drawable in &self.drawables
-        {
-            drawable.borrow().render();
+        if let Some(cameras) = world.iter_component::<Camera>() {
+            for (_, camera) in cameras
+            {
+                for shader in &self.shader_programs
+                {
+                    shader.update_camera_uniforms(camera);
+                }
+            }
         }
 
+        if let Some(drawables) = world.iter_component::<Lines>() {
+            for (_, drawable) in drawables
+            {
+                drawable.render();
+            }
+        }
+
+        if let Some(drawables) = world.iter_component::<Mesh>() {
+            for (_, drawable) in drawables
+            {
+                drawable.render();
+            }
+        }
+
+    }
+
+    pub fn swap_buffers(&mut self)
+    {
         self.window.window.swap_buffers();
     }
 
@@ -74,12 +112,12 @@ impl Renderer
     }
 }
 
+impl Component for Renderer {}
+
 impl Drop for Renderer
 {
     fn drop(&mut self)
     {
-        // Force drop on drawables to prevent opengl segfault
-        self.drawables.clear();
         // Force drop on shader programs too
         self.shader_programs.clear();
     }

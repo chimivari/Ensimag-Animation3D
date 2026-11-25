@@ -1,5 +1,7 @@
 use std::time::Instant;
 
+use crate::core::Component;
+
 pub struct Clock {
     paused: bool,
     // Accumulator in seconds for current frame
@@ -8,6 +10,8 @@ pub struct Clock {
     t0: Instant,
     t1: Instant,
 }
+
+impl Component for Clock {}
 
 /// Clock structure for engine
 impl Clock {

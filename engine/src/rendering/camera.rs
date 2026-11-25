@@ -2,14 +2,24 @@ use core::f32;
 
 use glam::{Mat4, Vec3};
 
+use crate::core::Component;
+
 pub struct Camera {
     pub position: Vec3,
 
     projection: Mat4,
 }
 
+impl Component for Camera {}
+
 impl Camera {
     pub fn new() -> Self {
+
+        // TODO: Move inside renderer, create property like near and far values for camera
+        unsafe {
+            gl::DepthRange(0.1, 1000.0);
+        }
+
         Self {
             position: Vec3 {
                 x: 0.0,
@@ -20,7 +30,7 @@ impl Camera {
                 f32::consts::FRAC_PI_4,
                 500.0 / 300.0,
                 0.1,
-                100.0,
+                1000.0,
             ),
         }
     }
