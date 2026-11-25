@@ -7,11 +7,12 @@ use engine::clock::Clock;
 use engine::core::world::Entity;
 use engine::prelude::*;
 use engine::rendering::camera::Camera;
+use engine::resource::meshloader::mesh_from_off_string;
 // use engine::resource::meshloader::mesh_from_off_string;
 use glam::Vec3;
 
 use engine::rendering::drawable::Lines;
-use engine::rendering::renderer::Renderer;
+use engine::rendering::renderer::{self, Renderer};
 use engine::rendering::shader::{ShaderConfig, ShaderSourceType};
 
 // #[warn(unused)]
@@ -98,6 +99,9 @@ use engine::rendering::shader::{ShaderConfig, ShaderSourceType};
 fn main() {
     // main_parser();
     // main_renderer_test();
+    let WIDTH = 600;
+    let HEIGHT = 500;
+    
 
     let bvh_file = std::fs::read_to_string("inputs/Example1.bvh").unwrap();
     let mut bvh = parse(bvh_file).unwrap();
@@ -129,27 +133,126 @@ fn main() {
             world.add_components_to(entity, (joint, joint_records));
         });
 
+    // Create clock
+    let clock = Clock::new();
+    let clock_ent = world.spawn();
+    world.add_components_to(clock_ent, clock);
+    
+
+    // Create renderer
+    let mut renderer = Renderer::try_new(WIDTH, HEIGHT, "Kinematic animations").unwrap();
+
+    let vertex_shader_path = "./resources/shaders/base.vert";
+    let fragment_shader_path = "./resources/shaders/base.frag";
+
+
+    let vertex_shader = ShaderConfig {
+        name: "default vertex shader".to_string(),
+        source_type: ShaderSourceType::FileName(vertex_shader_path.to_string()),
+    };
+
+    let fragment_shader = ShaderConfig {
+        name: "default fragment shader".to_string(),
+        source_type: ShaderSourceType::FileName(fragment_shader_path.to_string()),
+    };
+
+    let shader_program = renderer
+        .create_shader_program(vertex_shader, fragment_shader)
+        .unwrap();
+
+    let mesh = mesh_from_off_string(&std::fs::read_to_string("./resources/skin.off").unwrap(), shader_program).unwrap();
+    let body = world.spawn();
+    world.add_components_to(body, mesh);
+
+    let renderer_ent = world.spawn();
+    world.add_components_to(renderer_ent, renderer);
+
+    // Create camera
+    let camera = Camera::new();
+    let camera_ent = world.spawn();
+    world.add_components_to(camera_ent, camera);
+
     world
-        .add_system(Scheduler::Update, compute_next_frame)
+        .add_system(Scheduler::Startup, start_renderer)
+        .add_system(Scheduler::Update, render)
+        .add_system(Scheduler::Update, update)
         .run();
 }
 
-fn compute_next_frame(world: &mut World) {
-    let mut transforms = VecDeque::new();
+fn update(world: &mut World) {
 
-    for (&e, records) in world.iter_component_mut::<JointRecordsQueue>().unwrap() {
-        if let Some(record) = records.pop() {
-            transforms.push_back((e, record));
-        } else if !transforms.is_empty() {
-            panic!("Every joint should have the same number of records");
+    // Poll events
+    let mut should_stop = false;
+    for (&e, renderer) in world.iter_component_mut::<Renderer>().unwrap()
+    {
+        renderer.flush_events();
+        should_stop = renderer.stop_requested();
+    }
+    if should_stop { world.stop(); }
+
+    let mut current_time = 0.0;
+    let mut _delta_time = 0.0;
+
+    // Get clock time and delta time
+    if let Some(clocks) = world.iter_component_mut::<Clock>()
+    {
+        for (_, clock) in clocks
+        {
+            _delta_time = clock.start_next_iteration();
+            current_time = clock.get_total_time();
         }
     }
 
-    for (&e1, joint) in world.iter_component_mut::<Joint<Entity>>().unwrap() {
-        let (e2, record) = transforms.pop_front().unwrap();
-        assert_eq!(e1, e2);
-        joint.transform = record.transform;
+    if let Some(cameras) = world.iter_component_mut::<Camera>()
+    {
+        for (_, camera) in cameras
+        {
+            let dtheta = current_time * 2.0;
+            camera.position = 200.0 * Vec3 {
+                    x: dtheta.sin(),
+                    y: 0.5,
+                    z: dtheta.cos(),
+                };
+        }
     }
 
-    assert!(transforms.is_empty());
+    // let mut transforms = VecDeque::new();
+    //
+    // for (&e, records) in world.iter_component_mut::<JointRecordsQueue>().unwrap() {
+    //     if let Some(record) = records.pop() {
+    //         transforms.push_back((e, record));
+    //     } else if !transforms.is_empty() {
+    //         panic!("Every joint should have the same number of records");
+    //     }
+    // }
+    //
+    // for (&e1, joint) in world.iter_component_mut::<Joint<Entity>>().unwrap() {
+    //     let (e2, record) = transforms.pop_front().unwrap();
+    //     assert_eq!(e1, e2);
+    //     joint.transform = record.transform;
+    // }
+    //
+    // assert!(transforms.is_empty());
+}
+
+
+fn render(world: &mut World)
+{
+    for (&e, renderer) in world.iter_component::<Renderer>().unwrap()
+    {
+        renderer.render(&world);
+    }
+
+    for (&e, renderer) in world.iter_component_mut::<Renderer>().unwrap()
+    {
+        renderer.swap_buffers();
+    }
+}
+
+fn start_renderer(world: &mut World)
+{
+    for (&e, renderer) in world.iter_component::<Renderer>().unwrap()
+    {
+        renderer.start();
+    }
 }

@@ -64,7 +64,7 @@ impl ShaderProgram
         })
     }
 
-    pub fn update_camera_uniforms(&mut self, camera: &Camera)
+    pub fn update_camera_uniforms(&self, camera: &Camera)
     {
         unsafe {
             gl::UseProgram(self.gl_program_slot);

@@ -1,9 +1,10 @@
+use crate::core::Component;
 use crate::prelude::*;
 use crate::rendering::shader::ShaderProgram;
 use std::ffi::c_void;
 use std::mem::size_of;
 
-pub trait Drawable {
+pub trait Drawable : Component {
     fn render(&self);
     // WARN: Should be removed, a shader shouldn't be bound to a model, as a model can be reused
     // using multiple transforms, and also shaders
@@ -16,6 +17,7 @@ pub struct Lines {
     vbo: u32,
     vertices: Box<[Vec3]>,
 }
+
 
 impl Lines {
     pub fn new(vertices: &[Vec3], shader_program: &ShaderProgram) -> Self {
@@ -88,6 +90,8 @@ impl Lines {
     }
 }
 
+impl Component for Lines{}
+
 impl Drawable for Lines {
     fn render(&self) {
         unsafe {
@@ -126,13 +130,13 @@ pub struct Mesh {
     vao: u32,
     vbo: u32,
     ebo: u32,
-    n_faces: u32,
+    n_elements: u32,
     // Mesh information is stored on the GPU
 }
 
 impl Mesh {
     pub fn new(vertices: Vec<Vec3>, faces: Vec<UVec3>, shader: &ShaderProgram) -> Self {
-        compile_error!("Replace u16 to UVec3 in the pipeline");
+        // compile_error!("Replace u16 to UVec3 in the pipeline");
         let mut vao: u32 = u32::MAX;
         let mut vbo: u32 = u32::MAX;
         let mut ebo: u32 = u32::MAX;
@@ -164,7 +168,7 @@ impl Mesh {
 
             gl::BufferData(
                 gl::ELEMENT_ARRAY_BUFFER,
-                isize::try_from(size_of::<u16>() * faces.len()).unwrap(),
+                isize::try_from(size_of::<UVec3>() * faces.len()).unwrap(),
                 faces.as_ptr() as *const c_void,
                 gl::STATIC_DRAW,
             );
@@ -176,7 +180,7 @@ impl Mesh {
         }
 
         Self {
-            n_faces: faces.len() as u32,
+            n_elements: (faces.len() * 3) as u32,
             gl_shader_program_slot: shader.gl_program_slot,
             vao,
             vbo,
@@ -184,6 +188,8 @@ impl Mesh {
         }
     }
 }
+
+impl Component for Mesh{}
 
 impl Drawable for Mesh {
     fn render(&self) {
@@ -195,8 +201,8 @@ impl Drawable for Mesh {
 
             gl::DrawElements(
                 gl::TRIANGLES,
-                self.n_faces as i32,
-                gl::UNSIGNED_SHORT,
+                self.n_elements as i32,
+                gl::UNSIGNED_INT,
                 std::ptr::null(),
             );
         }

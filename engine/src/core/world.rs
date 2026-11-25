@@ -393,6 +393,7 @@ impl World {
     }
 
     pub fn run(&mut self) {
+        self.is_running = true;
         // Run startup systems
         let startup_systems = std::mem::take(&mut self.startup_systems);
 

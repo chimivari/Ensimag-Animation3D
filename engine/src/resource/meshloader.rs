@@ -19,6 +19,7 @@ pub fn mesh_from_off_string(content: &str, shader: &ShaderProgram) -> Result<Mes
     let mut tokens: Vec<TokenOff> = Vec::new();
     lex(&mut tokens, lines)?;
     let (vertices, faces) = parse(tokens)?;
+    println!("{}, {}", vertices[0], faces[0]);
 
     Ok(Mesh::new(vertices, faces, shader))
 }
@@ -45,6 +46,7 @@ fn lex(tokens: &mut Vec<TokenOff>, lines: Lines) -> Result<(), ParsingError> {
 fn parse(tokens: Vec<TokenOff>) -> Result<(Vec<Vec3>, Vec<UVec3>), ParsingError> {
     // Iter over tokens
     let mut it = TokenOffIterator::new(tokens);
+
     // Delete empty lines at the begining of the file
     while let Some(token) = it.peek()
         && *token == TokenOff::BreakLine
@@ -57,6 +59,8 @@ fn parse(tokens: Vec<TokenOff>) -> Result<(Vec<Vec3>, Vec<UVec3>), ParsingError>
         Some(TokenOff::Off) => (),
         _ => Err(ParsingError::new("OFF header missing"))?,
     }
+
+    it.parse_next_breakline()?;
 
     // Parse number of vertices, faces and edges
     let n_vertices = it.parse_next_number()?;
@@ -154,7 +158,7 @@ impl TokenOffIterator {
     fn parse_next_number(&mut self) -> Result<usize, ParsingError> {
         match self.next() {
             Some(TokenOff::Number(n)) => Ok(n),
-            _ => Err(ParsingError::new("Unexpeced token")),
+            _ => Err(ParsingError::new("Unexpeced token 0")),
         }
     }
 
@@ -162,7 +166,7 @@ impl TokenOffIterator {
     fn parse_next_real(&mut self) -> Result<f32, ParsingError> {
         match self.next() {
             Some(TokenOff::Real(v)) => Ok(v),
-            _ => Err(ParsingError::new("Unexpeced token")),
+            _ => Err(ParsingError::new("Unexpeced token 1")),
         }
     }
 
@@ -170,7 +174,7 @@ impl TokenOffIterator {
     pub fn parse_next_breakline(&mut self) -> Result<(), ParsingError> {
         match self.next() {
             Some(TokenOff::BreakLine) => Ok(()),
-            _ => Err(ParsingError::new("Unexpeced token")),
+            _ => Err(ParsingError::new("Unexpeced token 2")),
         }
     }
 

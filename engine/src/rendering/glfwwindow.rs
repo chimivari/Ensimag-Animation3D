@@ -35,6 +35,8 @@ impl GLFWWindow
 
         gl::Viewport::load_with(|s| glfw.get_proc_address_raw(s).expect("GLFW failed to return viewport proc address") as *const c_void);
 
+        glfw.window_hint(glfw::WindowHint::DepthBits(Some(24)));
+
         Ok(Self {
             glfw,
             window,
