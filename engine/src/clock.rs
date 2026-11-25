@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use crate::core::Component;
+use crate::prelude::Component;
 
 pub struct Clock {
     paused: bool,
@@ -15,16 +15,6 @@ impl Component for Clock {}
 
 /// Clock structure for engine
 impl Clock {
-    pub fn new() -> Self {
-        Self {
-            paused: false,
-            accumulator_current_s: 0.0,
-            accumulator_s: 0.0,
-            t0: Instant::now(),
-            t1: Instant::now(),
-        }
-    }
-
     pub fn pause(&mut self, pause: bool) {
         if self.paused {
             if pause {
@@ -82,5 +72,17 @@ impl Clock {
         }
 
         delta_time
+    }
+}
+
+impl Default for Clock {
+    fn default() -> Self {
+        Self {
+            paused: false,
+            accumulator_current_s: 0.0,
+            accumulator_s: 0.0,
+            t0: Instant::now(),
+            t1: Instant::now(),
+        }
     }
 }

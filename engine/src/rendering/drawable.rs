@@ -1,4 +1,3 @@
-use crate::core::Component;
 use crate::prelude::*;
 use crate::rendering::shader::ShaderProgram;
 use std::ffi::c_void;

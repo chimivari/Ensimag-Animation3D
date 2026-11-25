@@ -1,4 +1,3 @@
-use super::Component;
 use crate::prelude::*;
 
 #[derive(Debug, Clone)]

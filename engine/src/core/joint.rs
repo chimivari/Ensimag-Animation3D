@@ -1,6 +1,5 @@
 use std::collections::VecDeque;
 
-use super::Component;
 use super::IEntity;
 use crate::prelude::*;
 

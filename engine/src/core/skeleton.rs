@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use crate::{bvh_parser::Bvh, core::Component, prelude::*};
+use crate::{bvh_parser::Bvh, prelude::*};
 
 #[derive(Debug)]
 pub struct Skeleton {

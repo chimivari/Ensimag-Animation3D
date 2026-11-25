@@ -1,18 +1,10 @@
-use core::panic;
-use std::cell::RefCell;
-use std::collections::VecDeque;
-use std::rc::Rc;
-
 use engine::clock::Clock;
-use engine::core::world::Entity;
 use engine::prelude::*;
 use engine::rendering::camera::Camera;
-use engine::resource::meshloader::mesh_from_off_string;
+use engine::resource::off_parser::mesh_from_off_string;
 // use engine::resource::meshloader::mesh_from_off_string;
-use glam::Vec3;
 
-use engine::rendering::drawable::Lines;
-use engine::rendering::renderer::{self, Renderer};
+use engine::rendering::renderer::Renderer;
 use engine::rendering::shader::{ShaderConfig, ShaderSourceType};
 
 // #[warn(unused)]
@@ -99,6 +91,9 @@ use engine::rendering::shader::{ShaderConfig, ShaderSourceType};
 fn main() {
     // main_parser();
     // main_renderer_test();
+    let weights_file = std::fs::read_to_string("resources/meshes/skin_weights.txt").unwrap();
+    let _parser = engine::resource::weights_parser::WeightsParser::new(weights_file).unwrap();
+
     let WIDTH = 600;
     let HEIGHT = 500;
 
@@ -111,7 +106,7 @@ fn main() {
     world.spawn_with(skeleton);
 
     // Create clock
-    let clock = Clock::new();
+    let clock = Clock::default();
     let clock_ent = world.spawn();
     world.add_components_to(clock_ent, clock);
 

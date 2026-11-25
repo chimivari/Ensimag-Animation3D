@@ -1,7 +1,5 @@
 use crate::prelude::*;
 
-use crate::core::Component;
-
 use crate::core::world::World;
 use crate::rendering::camera::Camera;
 use crate::rendering::drawable::{Drawable, Lines, Mesh};
