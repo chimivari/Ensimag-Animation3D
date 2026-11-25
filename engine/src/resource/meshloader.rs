@@ -57,7 +57,7 @@ fn parse(tokens: Vec<TokenOff>) -> Result<(Vec<Vec3>, Vec<UVec3>), ParsingError>
         Some(TokenOff::Off) => (),
         _ => Err(ParsingError::new("OFF header missing"))?,
     }
-    it.parse_next_breakline();
+    it.parse_next_breakline()?;
 
     // Parse number of vertices, faces and edges
     let n_vertices = it.parse_next_number()?;
