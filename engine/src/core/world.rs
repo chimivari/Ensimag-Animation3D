@@ -1,4 +1,7 @@
-use crate::clock::Clock;
+use crate::{
+    clock::Clock,
+    rendering::{drawable, renderer},
+};
 use std::{
     any::{Any, TypeId},
     collections::{HashMap, VecDeque},
@@ -399,9 +402,33 @@ impl World {
             system(self, &clock);
         }
 
-        self.startup_systems = startup_systems;
-        self.update_systems = update_systems;
-        self.quit_systems = quit_systems;
+        // Drop drawable then renderer
+        self.drop_drawable();
+        self.drop_renderer();
+    }
+
+    fn drop_drawable(&mut self) {
+        if let Some(lines) = self
+            .components
+            .remove(&<drawable::Lines as Component>::type_id())
+        {
+            drop(lines);
+        }
+        if let Some(meshes) = self
+            .components
+            .remove(&<drawable::Mesh as Component>::type_id())
+        {
+            drop(meshes);
+        }
+    }
+
+    fn drop_renderer(&mut self) {
+        if let Some(renderer) = self
+            .components
+            .remove(&<renderer::Renderer as Component>::type_id())
+        {
+            drop(renderer);
+        }
     }
 
     pub fn stop(&mut self) {
